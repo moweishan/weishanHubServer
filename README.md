@@ -8,12 +8,6 @@ weishanHub 的 Java 后端，基于 RuoYi-Vue-fast 3.9.2，采用 Spring Boot 2.
 
 配套前端：[weishanHubWeb](https://github.com/moweishan/weishanHubWeb)。开发规范见 [AGENTS.md](AGENTS.md)。
 
-## 内置功能
-
-- 系统管理：用户、角色、菜单、部门、岗位、字典、参数及通知公告。
-- 日志与监控：操作日志、登录日志、在线用户、服务及缓存监控。
-- 开发工具：代码生成、接口文档及定时任务。
-
 ## 后端运行
 
 准备 JDK 8 或 17、Maven、MySQL 和 Redis，以下操作均在本仓库根目录执行。
