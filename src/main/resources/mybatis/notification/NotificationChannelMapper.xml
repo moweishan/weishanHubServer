@@ -1,0 +1,117 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+"http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.ruoyi.project.notification.mapper.NotificationChannelMapper">
+
+    <resultMap type="NotificationChannel" id="NotificationChannelResult">
+        <id     property="channelId"     column="channel_id"     />
+        <result property="routeCode"     column="route_code"     />
+        <result property="channelName"   column="channel_name"   />
+        <result property="provider"      column="provider"       />
+        <result property="corpId"        column="corp_id"        />
+        <result property="agentId"       column="agent_id"       />
+        <result property="toUser"        column="to_user"        />
+        <result property="secretCipher"  column="secret_cipher"  />
+        <result property="enabled"       column="enabled"        />
+        <result property="remark"        column="remark"         />
+        <result property="createBy"      column="create_by"      />
+        <result property="createTime"    column="create_time"    />
+        <result property="updateBy"      column="update_by"      />
+        <result property="updateTime"    column="update_time"    />
+    </resultMap>
+
+    <sql id="selectChannelVo">
+        select channel_id, route_code, channel_name, provider, corp_id, agent_id, to_user,
+               secret_cipher, enabled, remark, create_by, create_time, update_by, update_time
+        from notification_channel
+    </sql>
+
+    <select id="selectChannelById" parameterType="Long" resultMap="NotificationChannelResult">
+        <include refid="selectChannelVo"/>
+        where channel_id = #{channelId}
+    </select>
+
+    <select id="selectChannelByRouteCode" parameterType="String" resultMap="NotificationChannelResult">
+        <include refid="selectChannelVo"/>
+        where route_code = #{routeCode}
+    </select>
+
+    <select id="selectChannelList" parameterType="NotificationChannel" resultMap="NotificationChannelResult">
+        <include refid="selectChannelVo"/>
+        <where>
+            <if test="routeCode != null and routeCode != ''">
+                and route_code like concat('%', #{routeCode}, '%')
+            </if>
+            <if test="channelName != null and channelName != ''">
+                and channel_name like concat('%', #{channelName}, '%')
+            </if>
+            <if test="enabled != null and enabled != ''">
+                and enabled = #{enabled}
+            </if>
+        </where>
+        order by channel_id desc
+    </select>
+
+    <select id="selectEnabledByRouteCodesForUpdate" resultMap="NotificationChannelResult">
+        <include refid="selectChannelVo"/>
+        where enabled = '0'
+          and route_code in
+        <foreach item="routeCode" collection="routeCodes" open="(" separator="," close=")">
+            #{routeCode}
+        </foreach>
+        order by channel_id
+        for update
+    </select>
+
+    <select id="selectEnabledChannels" resultMap="NotificationChannelResult">
+        <include refid="selectChannelVo"/>
+        where enabled = '0'
+        order by channel_id
+    </select>
+
+    <select id="countByRouteCode" resultType="int">
+        select count(1) from notification_channel
+        where route_code = #{routeCode}
+        <if test="excludeId != null">
+            and channel_id != #{excludeId}
+        </if>
+    </select>
+
+    <insert id="insertChannel" parameterType="NotificationChannel" useGeneratedKeys="true" keyProperty="channelId">
+        insert into notification_channel
+        (route_code, channel_name, provider, corp_id, agent_id, to_user, secret_cipher,
+         enabled, remark, create_by, create_time)
+        values
+        (#{routeCode}, #{channelName}, #{provider}, #{corpId}, #{agentId}, #{toUser}, #{secretCipher},
+         #{enabled}, #{remark}, #{createBy}, #{createTime})
+    </insert>
+
+    <update id="updateChannel" parameterType="NotificationChannel">
+        update notification_channel
+        <set>
+            route_code = #{routeCode},
+            channel_name = #{channelName},
+            provider = #{provider},
+            corp_id = #{corpId},
+            agent_id = #{agentId},
+            to_user = #{toUser},
+            <if test="secretCipher != null and secretCipher != ''">
+                secret_cipher = #{secretCipher},
+            </if>
+            enabled = #{enabled},
+            remark = #{remark},
+            update_by = #{updateBy},
+            update_time = #{updateTime}
+        </set>
+        where channel_id = #{channelId}
+    </update>
+
+    <delete id="deleteChannelByIds">
+        delete from notification_channel where channel_id in
+        <foreach item="channelId" collection="channelIds" open="(" separator="," close=")">
+            #{channelId}
+        </foreach>
+    </delete>
+
+</mapper>

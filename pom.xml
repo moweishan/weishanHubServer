@@ -35,6 +35,8 @@
         <poi.version>4.1.2</poi.version>
         <oshi.version>7.4.4</oshi.version>
         <velocity.version>2.3</velocity.version>
+        <!-- 企业微信 SDK：4.6.0 为 JDK8 / Spring Boot 2.5 兼容版本，不升级核心框架 -->
+        <weixin-java-cp.version>4.6.0</weixin-java-cp.version>
         <!-- override dependency version -->
         <tomcat.version>9.0.112</tomcat.version>
         <logback.version>1.2.13</logback.version>
@@ -231,6 +233,13 @@
                     <groupId>javax.servlet</groupId>
                 </exclusion>
             </exclusions>
+        </dependency>
+
+        <!-- 企业微信应用消息（通知中心渠道） -->
+        <dependency>
+            <groupId>com.github.binarywang</groupId>
+            <artifactId>weixin-java-cp</artifactId>
+            <version>${weixin-java-cp.version}</version>
         </dependency>
 
 	</dependencies>

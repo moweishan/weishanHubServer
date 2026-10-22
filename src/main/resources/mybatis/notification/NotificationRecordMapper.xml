@@ -1,0 +1,148 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+"http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.ruoyi.project.notification.mapper.NotificationRecordMapper">
+
+    <resultMap type="NotificationRecord" id="NotificationRecordResult">
+        <id     property="recordId"      column="record_id"      />
+        <result property="requestId"     column="request_id"     />
+        <result property="credentialId"  column="credential_id"  />
+        <result property="contentHash"   column="content_hash"   />
+        <result property="messageType"   column="message_type"   />
+        <result property="title"         column="title"          />
+        <result property="summary"       column="summary"        />
+        <result property="detail"        column="detail"         />
+        <result property="tokenHash"     column="token_hash"     />
+        <result property="tokenCipher"   column="token_cipher"   />
+        <result property="routeCodes"    column="route_codes"    />
+        <result property="detailBaseUrl" column="detail_base_url" />
+        <result property="status"        column="status"         />
+        <result property="totalCount"    column="total_count"    />
+        <result property="successCount"  column="success_count"  />
+        <result property="failCount"     column="fail_count"     />
+        <result property="sentAt"        column="sent_at"        />
+        <result property="expiresAt"     column="expires_at"     />
+        <result property="revoked"       column="revoked"        />
+        <result property="revokedTime"   column="revoked_time"   />
+        <result property="revokedBy"     column="revoked_by"     />
+        <result property="deleted"       column="deleted"        />
+        <result property="deletedTime"   column="deleted_time"   />
+        <result property="createBy"      column="create_by"      />
+        <result property="createTime"    column="create_time"    />
+        <result property="updateBy"      column="update_by"      />
+        <result property="updateTime"    column="update_time"    />
+    </resultMap>
+
+    <sql id="selectRecordDetailVo">
+        select record_id, request_id, credential_id, content_hash, message_type, title, summary,
+               detail, token_hash, token_cipher, route_codes, detail_base_url, status, total_count,
+               success_count, fail_count, sent_at, expires_at, revoked, revoked_time, revoked_by,
+               deleted, deleted_time, create_by, create_time, update_by, update_time
+        from notification_record
+    </sql>
+
+    <sql id="selectRecordListVo">
+        select record_id, request_id, credential_id, content_hash, message_type, title, summary,
+               route_codes, detail_base_url, status, total_count, success_count, fail_count, sent_at,
+               expires_at, revoked, revoked_time, revoked_by, deleted, deleted_time, create_by,
+               create_time, update_by, update_time
+        from notification_record
+    </sql>
+
+    <insert id="insertRecord" parameterType="NotificationRecord" useGeneratedKeys="true" keyProperty="recordId">
+        insert into notification_record
+        (request_id, credential_id, content_hash, message_type, title, summary, detail,
+         token_hash, token_cipher, route_codes, detail_base_url, status, total_count, success_count, fail_count,
+         revoked, deleted, create_by, create_time)
+        values
+        (#{requestId}, #{credentialId}, #{contentHash}, #{messageType}, #{title}, #{summary}, #{detail},
+         #{tokenHash}, #{tokenCipher}, #{routeCodes}, #{detailBaseUrl}, #{status}, #{totalCount}, 0, 0,
+         '0', '0', #{createBy}, #{createTime})
+    </insert>
+
+    <select id="selectRecordById" parameterType="Long" resultMap="NotificationRecordResult">
+        <include refid="selectRecordDetailVo"/>
+        where record_id = #{recordId}
+    </select>
+
+    <select id="selectRecordForUpdate" parameterType="Long" resultMap="NotificationRecordResult">
+        <include refid="selectRecordDetailVo"/>
+        where record_id = #{recordId}
+        for update
+    </select>
+
+    <select id="selectRecordByTokenHash" parameterType="String" resultMap="NotificationRecordResult">
+        <include refid="selectRecordDetailVo"/>
+        where token_hash = #{tokenHash}
+    </select>
+
+    <select id="selectRecordByRequestId" resultMap="NotificationRecordResult">
+        <include refid="selectRecordDetailVo"/>
+        where credential_id = #{credentialId} and request_id = #{requestId}
+    </select>
+
+    <select id="selectRecordList" parameterType="NotificationRecord" resultMap="NotificationRecordResult">
+        <include refid="selectRecordListVo"/>
+        <where>
+            deleted = '0'
+            <if test="requestId != null and requestId != ''">
+                and request_id like concat('%', #{requestId}, '%')
+            </if>
+            <if test="title != null and title != ''">
+                and title like concat('%', #{title}, '%')
+            </if>
+            <if test="status != null and status != ''">
+                and status = #{status}
+            </if>
+            <if test="routeCode != null and routeCode != ''">
+                and exists (
+                    select 1 from notification_record_channel c
+                    where c.record_id = notification_record.record_id and c.route_code = #{routeCode}
+                )
+            </if>
+            <if test="params.beginTime != null and params.beginTime != ''">
+                and create_time &gt;= #{params.beginTime}
+            </if>
+            <if test="params.endTime != null and params.endTime != ''">
+                and create_time &lt;= #{params.endTime}
+            </if>
+        </where>
+        order by record_id desc
+    </select>
+
+    <update id="markFirstSent">
+        update notification_record
+        set sent_at = #{sentAt}, expires_at = #{expiresAt}, update_time = #{sentAt}
+        where record_id = #{recordId} and sent_at is null
+    </update>
+
+    <update id="updateAggregate">
+        update notification_record
+        set status = #{status}, success_count = #{successCount}, fail_count = #{failCount},
+            total_count = #{totalCount}, update_time = #{updateTime}
+        where record_id = #{recordId}
+    </update>
+
+    <update id="updateStatus">
+        update notification_record
+        set status = #{status}, update_time = #{updateTime}
+        where record_id = #{recordId} and deleted = '0'
+    </update>
+
+    <update id="revokeRecord">
+        update notification_record
+        set revoked = '1', revoked_time = #{revokedTime}, revoked_by = #{revokedBy}, update_time = #{revokedTime}
+        where record_id = #{recordId} and deleted = '0'
+    </update>
+
+    <update id="softDeleteRecords">
+        update notification_record
+        set deleted = '1', deleted_time = #{deletedTime}, update_by = #{deletedBy}, update_time = #{deletedTime}
+        where deleted = '0' and record_id in
+        <foreach item="recordId" collection="recordIds" open="(" separator="," close=")">
+            #{recordId}
+        </foreach>
+    </update>
+
+</mapper>

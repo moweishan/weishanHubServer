@@ -1,0 +1,32 @@
+# 通知中心配置示例（仅示例，不包含任何真实密钥）。
+# 将下列内容按需合并到 server/config/application-local.yml 或通过环境变量注入；
+# 本项目不修改基线 application.yml，也不提交真实私密配置。
+
+notification:
+  # 必填：渠道 Secret / 详情票据加密主密钥。建议至少 32 字节随机值。
+  # 环境变量：NOTIFICATION_MASTER_KEY
+  master-key: "${NOTIFICATION_MASTER_KEY:}"
+
+  # 必填：对外开放的前端站点地址，用于生成 /notification/detail/:token 链接。
+  # 生产必须是 https；仅 localhost / 127.0.0.1 / ::1 开发环境允许 http。
+  # 环境变量：NOTIFICATION_PUBLIC_BASE_URL
+  public-base-url: "${NOTIFICATION_PUBLIC_BASE_URL:https://hub.example.com}"
+
+  dispatch:
+    # 是否启用后台发送扫描
+    enabled: true
+    # 扫描间隔毫秒
+    scan-interval-ms: 2000
+    # 每轮最多领取的待发送渠道数
+    batch-size: 20
+    # 通知专用有界线程池
+    core-pool-size: 2
+    max-pool-size: 4
+    queue-capacity: 200
+
+  rate-limit:
+    window-seconds: 60
+    # 单个调用凭证每窗口请求数
+    per-credential: 60
+    # 单个来源 IP 每窗口请求数
+    per-ip: 120

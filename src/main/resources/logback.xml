@@ -73,6 +73,9 @@
 	
 	<!-- 系统模块日志级别控制  -->
 	<logger name="com.ruoyi" level="info" />
+	<!-- 企业微信 SDK 的 WARN/DEBUG 日志会输出带 access_token 的完整请求 URL 与消息正文，
+	     通知模块不允许令牌/正文进入日志，因此精确关闭该 SDK 包；通知模块自身的脱敏错误记录仍保留。 -->
+	<logger name="me.chanjar.weixin" level="OFF" />
 	<!-- Spring日志级别控制  -->
 	<logger name="org.springframework" level="warn" />
 

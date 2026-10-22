@@ -1,0 +1,121 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+"http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.ruoyi.project.notification.mapper.NotificationRecordChannelMapper">
+
+    <resultMap type="NotificationRecordChannel" id="NotificationRecordChannelResult">
+        <id     property="channelId"       column="channel_id"        />
+        <result property="recordId"        column="record_id"         />
+        <result property="routeCode"       column="route_code"        />
+        <result property="channelName"     column="channel_name"      />
+        <result property="provider"        column="provider"          />
+        <result property="corpId"          column="corp_id"           />
+        <result property="agentId"         column="agent_id"          />
+        <result property="toUser"          column="to_user"           />
+        <result property="secretCipher"    column="secret_cipher"     />
+        <result property="status"          column="status"            />
+        <result property="claimToken"      column="claim_token"       />
+        <result property="attemptCount"    column="attempt_count"     />
+        <result property="errorMessage"    column="error_message"     />
+        <result property="wecomMsgId"      column="wecom_msg_id"      />
+        <result property="lastAttemptTime" column="last_attempt_time" />
+        <result property="createTime"      column="create_time"       />
+        <result property="updateTime"      column="update_time"       />
+    </resultMap>
+
+    <sql id="selectChannelVo">
+        select channel_id, record_id, route_code, channel_name, provider, corp_id, agent_id,
+               to_user, secret_cipher, status, claim_token, attempt_count, error_message,
+               wecom_msg_id, last_attempt_time, create_time, update_time
+        from notification_record_channel
+    </sql>
+
+    <insert id="batchInsertChannels">
+        insert into notification_record_channel
+        (record_id, route_code, channel_name, provider, corp_id, agent_id, to_user, secret_cipher,
+         status, attempt_count, create_time, update_time)
+        values
+        <foreach collection="channels" item="channel" separator=",">
+            (#{channel.recordId}, #{channel.routeCode}, #{channel.channelName}, #{channel.provider},
+             #{channel.corpId}, #{channel.agentId}, #{channel.toUser}, #{channel.secretCipher},
+             #{channel.status}, 0, #{channel.createTime}, #{channel.updateTime})
+        </foreach>
+    </insert>
+
+    <select id="selectChannelsByRecordId" parameterType="Long" resultMap="NotificationRecordChannelResult">
+        <include refid="selectChannelVo"/>
+        where record_id = #{recordId}
+        order by channel_id
+    </select>
+
+    <select id="selectChannelById" parameterType="Long" resultMap="NotificationRecordChannelResult">
+        <include refid="selectChannelVo"/>
+        where channel_id = #{channelId}
+    </select>
+
+    <select id="selectPendingChannelIds" resultType="Long">
+        select c.channel_id
+        from notification_record_channel c
+        join notification_record r on r.record_id = c.record_id
+        where c.status = 'PENDING' and r.deleted = '0' and r.revoked = '0'
+        order by c.channel_id
+        limit #{limit}
+    </select>
+
+    <update id="claimChannel">
+        update notification_record_channel
+        set status = 'SENDING', claim_token = #{claimToken}, attempt_count = attempt_count + 1,
+            last_attempt_time = #{now}, update_time = #{now}
+        where channel_id = #{channelId} and status = 'PENDING'
+    </update>
+
+    <update id="markChannelSuccess">
+        update notification_record_channel
+        set status = 'SUCCESS', claim_token = null, error_message = null, wecom_msg_id = #{msgId},
+            last_attempt_time = #{now}, update_time = #{now}
+        where channel_id = #{channelId} and status = 'SENDING' and claim_token = #{claimToken}
+    </update>
+
+    <update id="markChannelFailed">
+        update notification_record_channel
+        set status = 'FAILED', claim_token = null, error_message = #{errorMessage},
+            last_attempt_time = #{now}, update_time = #{now}
+        where channel_id = #{channelId} and status = 'SENDING' and claim_token = #{claimToken}
+    </update>
+
+    <update id="resetFailedToPending">
+        update notification_record_channel
+        set status = 'PENDING', claim_token = null, error_message = null, update_time = #{now}
+        where record_id = #{recordId} and status = 'FAILED'
+    </update>
+
+    <update id="recoverSending">
+        update notification_record_channel
+        set status = 'FAILED', claim_token = null, error_message = #{errorMessage},
+            update_time = #{now}
+        where status = 'SENDING'
+    </update>
+
+    <update id="recoverSendingByRecord">
+        update notification_record_channel
+        set status = 'FAILED', claim_token = null, error_message = #{errorMessage},
+            update_time = #{now}
+        where record_id = #{recordId} and status = 'SENDING'
+    </update>
+
+    <select id="selectRecordIdsByChannelStatus" parameterType="String" resultType="Long">
+        select distinct record_id from notification_record_channel where status = #{status}
+    </select>
+
+    <select id="selectCounts" parameterType="Long" resultType="NotificationChannelCounts">
+        select
+            coalesce(sum(case when status = 'PENDING' then 1 else 0 end), 0) as pendingCount,
+            coalesce(sum(case when status = 'SENDING' then 1 else 0 end), 0) as sendingCount,
+            coalesce(sum(case when status = 'SUCCESS' then 1 else 0 end), 0) as successCount,
+            coalesce(sum(case when status = 'FAILED' then 1 else 0 end), 0) as failedCount
+        from notification_record_channel
+        where record_id = #{recordId}
+    </select>
+
+</mapper>
