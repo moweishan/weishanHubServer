@@ -1,0 +1,49 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+"http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.ruoyi.project.tool.stress.mapper.StressTaskResponseMapper">
+
+    <resultMap type="StressTaskResponse" id="StressTaskResponseResult">
+        <id     property="responseId"   column="response_id"   />
+        <result property="taskId"       column="task_id"       />
+        <result property="configId"     column="config_id"     />
+        <result property="configName"   column="config_name"   />
+        <result property="requestUrl"   column="request_url"   />
+        <result property="httpMethod"   column="http_method"   />
+        <result property="statusCode"   column="status_code"   />
+        <result property="durationMs"   column="duration_ms"   />
+        <result property="success"      column="success"       />
+        <result property="responseText" column="response_text" />
+        <result property="errorMessage" column="error_message" />
+        <result property="truncated"    column="truncated"     />
+        <result property="createTime"   column="create_time"   />
+    </resultMap>
+
+    <sql id="selectResponseVo">
+        select response_id, task_id, config_id, config_name, request_url, http_method,
+               status_code, duration_ms, success, response_text, error_message, truncated, create_time
+        from tool_stress_response
+    </sql>
+
+    <select id="selectResponseListByTaskId" parameterType="Long" resultMap="StressTaskResponseResult">
+        <include refid="selectResponseVo"/>
+        where task_id = #{taskId}
+        order by response_id desc
+    </select>
+
+    <insert id="insertResponse" parameterType="StressTaskResponse" useGeneratedKeys="true" keyProperty="responseId">
+        insert into tool_stress_response (
+            task_id, config_id, config_name, request_url, http_method, status_code,
+            duration_ms, success, response_text, error_message, truncated, create_time
+        ) values (
+            #{taskId}, #{configId}, #{configName}, #{requestUrl}, #{httpMethod}, #{statusCode},
+            #{durationMs}, #{success}, #{responseText}, #{errorMessage}, #{truncated}, sysdate()
+        )
+    </insert>
+
+    <delete id="deleteResponseByTaskId" parameterType="Long">
+        delete from tool_stress_response where task_id = #{taskId}
+    </delete>
+
+</mapper>

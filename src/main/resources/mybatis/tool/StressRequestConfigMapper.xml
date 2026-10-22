@@ -1,0 +1,147 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+"http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.ruoyi.project.tool.stress.mapper.StressRequestConfigMapper">
+
+    <resultMap type="StressRequestConfig" id="StressRequestConfigResult">
+        <id     property="configId"       column="config_id"         />
+        <result property="configName"     column="config_name"       />
+        <result property="requestUrl"     column="request_url"       />
+        <result property="httpMethod"     column="http_method"       />
+        <result property="headersJson"    column="headers_json"      />
+        <result property="queryParamsJson" column="query_params_json" />
+        <result property="bodyType"       column="body_type"         />
+        <result property="bodyContent"    column="body_content"      />
+        <result property="contentType"    column="content_type"      />
+        <result property="timeoutMs"      column="timeout_ms"        />
+        <result property="enabled"        column="enabled"           />
+        <result property="probeStatus"    column="probe_status"     />
+        <result property="probeTime"      column="probe_time"       />
+        <result property="probeMessage"   column="probe_message"    />
+        <result property="createBy"       column="create_by"         />
+        <result property="createTime"     column="create_time"       />
+        <result property="updateBy"       column="update_by"         />
+        <result property="updateTime"     column="update_time"       />
+        <result property="remark"         column="remark"            />
+    </resultMap>
+
+    <sql id="selectConfigVo">
+        select config_id, config_name, request_url, http_method, headers_json, query_params_json,
+               body_type, body_content, content_type, timeout_ms, enabled,
+               probe_status, probe_time, probe_message,
+               create_by, create_time, update_by, update_time, remark
+        from tool_stress_request_config
+    </sql>
+
+    <select id="selectConfigList" parameterType="StressRequestConfig" resultMap="StressRequestConfigResult">
+        <include refid="selectConfigVo"/>
+        <where>
+            <if test="configName != null and configName != ''">
+                AND config_name like concat('%', #{configName}, '%')
+            </if>
+            <if test="enabled != null and enabled != ''">
+                AND enabled = #{enabled}
+            </if>
+            <if test="probeStatus != null and probeStatus != ''">
+                AND probe_status = #{probeStatus}
+            </if>
+        </where>
+        order by config_id desc
+    </select>
+
+    <select id="selectProbeConfigs" resultMap="StressRequestConfigResult">
+        <include refid="selectConfigVo"/>
+        <where>
+            <if test="configIds != null and configIds.length > 0">
+                AND config_id in
+                <foreach item="configId" collection="configIds" open="(" separator="," close=")">
+                    #{configId}
+                </foreach>
+            </if>
+            <if test="query != null">
+                <if test="query.configName != null and query.configName != ''">
+                    AND config_name like concat('%', #{query.configName}, '%')
+                </if>
+                <if test="query.enabled != null and query.enabled != ''">
+                    AND enabled = #{query.enabled}
+                </if>
+                <if test="query.probeStatus != null and query.probeStatus != ''">
+                    AND probe_status = #{query.probeStatus}
+                </if>
+            </if>
+        </where>
+        order by config_id asc
+    </select>
+
+    <update id="updateProbeResult">
+        update tool_stress_request_config
+        set probe_status = #{probeStatus},
+            probe_time = #{probeTime,jdbcType=TIMESTAMP},
+            probe_message = #{probeMessage,jdbcType=VARCHAR}
+        where config_id = #{configId}
+    </update>
+
+    <!-- 一键停用：只处理试活判定为失效且当前仍启用的配置 -->
+    <update id="disableDeadConfigs">
+        update tool_stress_request_config
+        set enabled = '1',
+            update_by = #{updateBy,jdbcType=VARCHAR},
+            update_time = sysdate()
+        where probe_status = 'dead'
+          and enabled = '0'
+    </update>
+
+    <select id="selectAllUrls" resultType="java.lang.String">
+        select request_url from tool_stress_request_config
+    </select>
+
+    <select id="selectConfigById" parameterType="Long" resultMap="StressRequestConfigResult">
+        <include refid="selectConfigVo"/>
+        where config_id = #{configId}
+    </select>
+
+    <select id="selectEnabledConfigs" resultMap="StressRequestConfigResult">
+        <include refid="selectConfigVo"/>
+        where enabled = '0'
+        order by config_id asc
+    </select>
+
+    <insert id="insertConfig" parameterType="StressRequestConfig" useGeneratedKeys="true" keyProperty="configId">
+        insert into tool_stress_request_config (
+            config_name, request_url, http_method, headers_json, query_params_json,
+            body_type, body_content, content_type, timeout_ms, enabled,
+            create_by, create_time, remark
+        ) values (
+            #{configName}, #{requestUrl}, #{httpMethod}, #{headersJson}, #{queryParamsJson},
+            #{bodyType}, #{bodyContent}, #{contentType}, #{timeoutMs}, #{enabled},
+            #{createBy}, sysdate(), #{remark}
+        )
+    </insert>
+
+    <update id="updateConfig" parameterType="StressRequestConfig">
+        update tool_stress_request_config
+        set config_name = #{configName},
+            request_url = #{requestUrl},
+            http_method = #{httpMethod},
+            headers_json = #{headersJson},
+            query_params_json = #{queryParamsJson},
+            body_type = #{bodyType},
+            body_content = #{bodyContent},
+            content_type = #{contentType},
+            timeout_ms = #{timeoutMs},
+            enabled = #{enabled},
+            update_by = #{updateBy},
+            update_time = sysdate(),
+            remark = #{remark}
+        where config_id = #{configId}
+    </update>
+
+    <delete id="deleteConfigByIds" parameterType="Long">
+        delete from tool_stress_request_config where config_id in
+        <foreach item="configId" collection="array" open="(" separator="," close=")">
+            #{configId}
+        </foreach>
+    </delete>
+
+</mapper>

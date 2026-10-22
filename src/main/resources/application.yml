@@ -131,9 +131,25 @@ xss:
   # 过滤开关
   enabled: true
   # 排除链接（多个用逗号分隔）
-  excludes: /system/notice
+  # 请求配置接口的 URL/headers/body 需保持原始字符（如 &、XML 标签），仅排除该精确路径
+  excludes: /system/notice,/tool/stress/config,/tool/stress/config/**
   # 匹配链接
   urlPatterns: /system/*,/monitor/*,/tool/*
+
+# 手机压力测试
+stress:
+  # 同时运行的任务数上限，满额时拒绝新任务而不是排队
+  max-concurrent-tasks: 20
+  # 单个任务内并发请求的工作线程数（两条线程同时跑），也是任务未指定线程数时的默认值
+  threads-per-task: 2
+  # 单个任务允许配置的最大执行线程数
+  max-threads-per-task: 8
+  # 请求配置“批量试活”的并发探测线程数
+  probe-threads: 4
+  # 试活替换 {{phone}} 使用的手机号：10 开头 11 位，号码规划中不可能分配给个人用户，保证不会真的投递短信
+  probe-phone: 10000000000
+  # 允许把真实可投递号码用于试活（会真的给机主发短信，默认关闭）
+  probe-phone-allow-live: false
 
 # 代码生成
 gen:
