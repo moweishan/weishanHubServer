@@ -1,0 +1,32 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+"http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.ruoyi.project.home.mapper.HomeShortcutMapper">
+
+    <resultMap type="HomeShortcutEntity" id="HomeShortcutResult">
+        <id     property="shortcutId" column="shortcut_id" />
+        <result property="userId"     column="user_id"     />
+        <result property="menuId"     column="menu_id"     />
+        <result property="orderNum"   column="order_num"   />
+        <result property="createTime" column="create_time" />
+        <result property="updateTime" column="update_time" />
+    </resultMap>
+
+    <select id="selectByUserId" parameterType="Long" resultMap="HomeShortcutResult">
+        select shortcut_id, user_id, menu_id, order_num, create_time, update_time
+        from sys_user_shortcut
+        where user_id = #{userId}
+        order by order_num asc, shortcut_id asc
+    </select>
+
+    <delete id="deleteByUserId" parameterType="Long">
+        delete from sys_user_shortcut where user_id = #{userId}
+    </delete>
+
+    <insert id="insertShortcut">
+        insert into sys_user_shortcut (user_id, menu_id, order_num, create_time, update_time)
+        values (#{userId}, #{menuId}, #{orderNum}, #{now}, #{now})
+    </insert>
+
+</mapper>

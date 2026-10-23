@@ -8,6 +8,8 @@ weishanHub 的 Java 后端，基于 RuoYi-Vue-fast 3.9.2，采用 Spring Boot 2.
 
 配套前端：[weishanHubWeb](https://github.com/moweishan/weishanHubWeb)。开发规范见 [AGENTS.md](AGENTS.md)。
 
+后台个人工作台（天气、快捷入口、今日通知）的接口、迁移及高德 Key 配置见 [docs/home-workbench.md](docs/home-workbench.md)。首次启用工作台前需先执行 `sql/20261023_add_home_workbench.sql`，否则快捷入口会因 `sys_user_shortcut` 缺失返回 500。
+
 ## 后端运行
 
 准备 JDK 8 或 17、Maven、MySQL 和 Redis，以下操作均在本仓库根目录执行。

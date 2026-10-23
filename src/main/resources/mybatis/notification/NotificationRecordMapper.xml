@@ -111,6 +111,14 @@ PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
         order by record_id desc
     </select>
 
+    <select id="countFirstSentBetween" resultType="long">
+        select count(1)
+        from notification_record
+        where create_by = 'open-api'
+          and sent_at &gt;= #{begin}
+          and sent_at &lt; #{end}
+    </select>
+
     <update id="markFirstSent">
         update notification_record
         set sent_at = #{sentAt}, expires_at = #{expiresAt}, update_time = #{sentAt}

@@ -29,6 +29,14 @@ public interface NotificationRecordMapper
     List<NotificationRecord> selectRecordList(NotificationRecord query);
 
     /**
+     * 统计北京时间 [begin, end) 内首次渠道成功的父通知记录数。
+     *
+     * <p>只按 notification_record.sent_at 计数，不关联渠道子表、不按成功状态、
+     * 不排除软删除记录：软删除只影响可见性，不扣减历史统计。</p>
+     */
+    long countFirstSentBetween(@Param("begin") Date begin, @Param("end") Date end);
+
+    /**
      * CAS 设置首次成功时间；只在 sent_at 为空时成功，保证后续渠道成功与重试都不延长。
      */
     int markFirstSent(@Param("recordId") Long recordId, @Param("sentAt") Date sentAt,
