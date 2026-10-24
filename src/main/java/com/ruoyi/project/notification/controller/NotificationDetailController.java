@@ -50,7 +50,7 @@ public class NotificationDetailController
         return AjaxResult.success(result.getData());
     }
 
-    private NotificationAccessContext buildContext(HttpServletRequest request)
+    static NotificationAccessContext buildContext(HttpServletRequest request)
     {
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
         boolean authenticated = authentication != null && authentication.isAuthenticated()
@@ -66,7 +66,7 @@ public class NotificationDetailController
         return new NotificationAccessContext(authenticated, hasPermission, request.getHeader("User-Agent"));
     }
 
-    private void applySecurityHeaders(HttpServletResponse response)
+    static void applySecurityHeaders(HttpServletResponse response)
     {
         response.setHeader("Cache-Control", "no-store, no-cache, must-revalidate, max-age=0");
         response.setHeader("Pragma", "no-cache");

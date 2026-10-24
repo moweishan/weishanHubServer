@@ -12,6 +12,8 @@ weishanHub 的 Java 后端，基于 RuoYi-Vue-fast 3.9.2，采用 Spring Boot 2.
 
 ## 后端运行
 
+通知详情页的原生问题远程回答接口及增量迁移见 [docs/notification-questions.md](docs/notification-questions.md)。
+
 准备 JDK 8 或 17、Maven、MySQL 和 Redis，以下操作均在本仓库根目录执行。
 
 ```powershell

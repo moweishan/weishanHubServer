@@ -1,0 +1,35 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.ruoyi.project.notification.mapper.NotificationQuestionMapper">
+  <resultMap id="Question" type="com.ruoyi.project.notification.domain.NotificationQuestion">
+    <id property="recordId" column="record_id"/>
+    <result property="credentialId" column="credential_id"/>
+    <result property="requestId" column="request_id"/>
+    <result property="contentHash" column="content_hash"/>
+    <result property="questionsJson" column="questions_json"/>
+    <result property="answerJson" column="answer_json"/>
+    <result property="state" column="state"/>
+    <result property="source" column="source"/>
+    <result property="instanceId" column="instance_id"/>
+    <result property="agentId" column="agent_id"/>
+    <result property="callId" column="call_id"/>
+  </resultMap>
+  <select id="lockCredential" resultType="java.lang.Long">
+    select credential_id from notification_credential where credential_id = #{credentialId} for update
+  </select>
+  <select id="selectByRequest" resultMap="Question">
+    select * from notification_question where credential_id = #{credentialId} and request_id = #{requestId}
+  </select>
+  <select id="selectByRecord" resultMap="Question">
+    select * from notification_question where record_id = #{recordId}
+  </select>
+  <insert id="insert">
+    insert into notification_question
+      (record_id, credential_id, request_id, content_hash, questions_json, state, instance_id, agent_id, call_id, create_time, update_time)
+    values (#{recordId}, #{credentialId}, #{requestId}, #{contentHash}, #{questionsJson}, 'WAITING', #{instanceId}, #{agentId}, #{callId}, now(), now())
+  </insert>
+  <update id="update">
+    update notification_question set state = #{state}, source = #{source}, answer_json = #{answerJson}, update_time = now()
+    where record_id = #{recordId}
+  </update>
+</mapper>
